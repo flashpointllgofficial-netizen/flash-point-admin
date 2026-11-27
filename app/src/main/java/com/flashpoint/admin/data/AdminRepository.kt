@@ -1,6 +1,8 @@
 package com.flashpoint.admin.data
 
+import com.flashpoint.admin.core.OrderItem
 import com.flashpoint.admin.core.OrderSummary
+import com.flashpoint.admin.core.PersonItem
 import com.flashpoint.admin.core.SellerItem
 import com.flashpoint.admin.core.Stats
 import com.google.firebase.database.DataSnapshot
@@ -61,6 +63,52 @@ class AdminRepository(
         db.getReference("sellers/$uid").updateChildren(
             mapOf("status" to status, "approved" to (status == "APPROVED"),
                 "updatedAt" to ServerValue.TIMESTAMP)
+        ).await()
+    }
+
+    private fun DataSnapshot.statusOf(): String = str("status").ifBlank {
+        if (child("approved").value == true) "APPROVED" else "PENDING"
+    }
+
+    fun deliveryPartners(): Flow<List<PersonItem>> = listen("deliveryPartners") { s ->
+        s.children.map {
+            PersonItem(it.key.orEmpty(), it.str("name"), it.str("email"), it.str("phone"),
+                it.statusOf(), "Vehicle: ${it.str("vehicle").ifBlank { "-" }}")
+        }.sortedBy { it.name.lowercase() }
+    }
+
+    fun customers(): Flow<List<PersonItem>> = listen("customers") { s ->
+        s.children.map {
+            PersonItem(it.key.orEmpty(), it.str("name"), it.str("email"), it.str("phone"),
+                "ACTIVE", "Address: ${it.str("address").ifBlank { "-" }}")
+        }.sortedBy { it.name.lowercase() }
+    }
+
+    suspend fun setPartnerStatus(uid: String, status: String) {
+        db.getReference("deliveryPartners/$uid").updateChildren(
+            mapOf("status" to status, "approved" to (status == "APPROVED"),
+                "updatedAt" to ServerValue.TIMESTAMP)
+        ).await()
+    }
+
+    fun orders(): Flow<List<OrderItem>> = listen("orders") { s ->
+        s.children.map {
+            OrderItem(it.key.orEmpty(), it.str("customerName"), it.str("customerUid"),
+                it.str("sellerUid"), it.str("deliveryUid"), it.dbl("totalAmount"),
+                it.str("status"), it.str("address"), it.str("phone"),
+                it.str("locationLink"), it.long("createdAt"))
+        }.sortedByDescending { it.createdAt }
+    }
+
+    suspend fun assignDelivery(orderId: String, partnerUid: String) {
+        db.getReference("orders/$orderId").updateChildren(
+            mapOf("deliveryUid" to partnerUid, "updatedAt" to ServerValue.TIMESTAMP)
+        ).await()
+    }
+
+    suspend fun cancelOrder(orderId: String) {
+        db.getReference("orders/$orderId").updateChildren(
+            mapOf("status" to "CANCELLED", "updatedAt" to ServerValue.TIMESTAMP)
         ).await()
     }
 }

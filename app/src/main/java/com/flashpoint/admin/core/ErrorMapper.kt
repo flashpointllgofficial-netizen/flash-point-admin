@@ -8,8 +8,12 @@ import java.net.SocketTimeoutException
 import java.net.UnknownHostException
 
 class NotAdminException : Exception("Not an administrator")
+class UploadException(message: String) : Exception(message)
+class ValidationException(message: String) : Exception(message)
 
 fun Throwable.toUserMessage(): String = when {
+    this is ValidationException -> message ?: "Please complete all required fields."
+    this is UploadException -> message ?: "Image upload failed. Please try again."
     this is NotAdminException -> "You do not have permission to perform this action."
     this is FirebaseNetworkException || this is UnknownHostException ->
         "No internet connection. Please check your network."

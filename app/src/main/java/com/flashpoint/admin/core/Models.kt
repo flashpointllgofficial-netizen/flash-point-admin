@@ -28,3 +28,52 @@ data class SellerItem(
     val category: String,
     val status: String, // PENDING, APPROVED, REJECTED, SUSPENDED
 )
+
+data class PersonItem(
+    val uid: String,
+    val name: String,
+    val email: String,
+    val phone: String,
+    val status: String,
+    val detail: String,
+)
+
+data class OrderItem(
+    val id: String,
+    val customerName: String,
+    val customerUid: String,
+    val sellerUid: String,
+    val deliveryUid: String,
+    val totalAmount: Double,
+    val status: String,
+    val address: String,
+    val phone: String,
+    val locationLink: String,
+    val createdAt: Long,
+)
+
+data class BannerItem(
+    val id: String = "",
+    val title: String = "",
+    val imageUrl: String = "",
+    val imagePublicId: String = "",
+    val destinationType: String = "URL", // PRODUCT, SELLER, CATEGORY, URL
+    val destinationValue: String = "",
+    val enabled: Boolean = true,
+    val sortOrder: Long = 0,
+    val startAt: Long = 0,
+    val expiresAt: Long = 0,
+)
+
+data class SentNotification(
+    val id: String,
+    val title: String,
+    val message: String,
+    val imageUrl: String,
+    val linkUrl: String,
+    val buttonText: String,
+    val audience: String,
+    val targetUid: String,
+    val recipients: Long,
+    val createdAt: Long,
+)
