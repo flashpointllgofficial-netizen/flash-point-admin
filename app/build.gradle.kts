@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -17,7 +19,6 @@ android {
         versionName = "1.0.0"
     }
 
-    // Shared keystore so local builds and GitHub Actions produce the SAME SHA fingerprint.
     signingConfigs {
         getByName("debug") {
             storeFile = file("debug.keystore")
@@ -30,15 +31,20 @@ android {
         debug { signingConfig = signingConfigs.getByName("debug") }
         release {
             isMinifyEnabled = false
-            signingConfig = signingConfigs.getByName("debug") // replace with a real release key before Play Store
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
-    kotlinOptions { jvmTarget = "17" }
     buildFeatures { compose = true }
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_17)
+    }
 }
 
 dependencies {
