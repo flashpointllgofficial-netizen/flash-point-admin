@@ -13,12 +13,15 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.flashpoint.admin.core.SellerItem
+import com.flashpoint.admin.ui.details.DetailDialog
+import com.flashpoint.admin.ui.details.DetailKind
 
 @Composable
 fun SellersScreen(vm: SellersViewModel = viewModel()) {
     val s by vm.state.collectAsStateWithLifecycle()
     val snack = remember { SnackbarHostState() }
     var pending by remember { mutableStateOf<Pair<SellerItem, String>?>(null) }
+    var detail by remember { mutableStateOf<SellerItem?>(null) }
 
     LaunchedEffect(s.message) { s.message?.let { snack.showSnackbar(it); vm.messageShown() } }
 
@@ -41,6 +44,7 @@ fun SellersScreen(vm: SellersViewModel = viewModel()) {
                                 Text("Category: ${seller.category.ifBlank { "-" }}", style = MaterialTheme.typography.bodySmall)
                                 Text("UID: ${seller.uid}", style = MaterialTheme.typography.labelSmall)
                                 AssistChip({}, { Text(seller.status) })
+                                TextButton({ detail = seller }) { Text("View details, products & orders") }
                                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                     when (seller.status) {
                                         "PENDING" -> {
@@ -58,6 +62,8 @@ fun SellersScreen(vm: SellersViewModel = viewModel()) {
             }
         }
     }
+
+    detail?.let { DetailDialog(DetailKind.SELLER, it.uid, it.name.ifBlank { it.email }) { detail = null } }
 
     pending?.let { (seller, status) ->
         AlertDialog(

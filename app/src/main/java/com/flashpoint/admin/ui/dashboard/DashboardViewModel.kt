@@ -16,6 +16,7 @@ data class DashboardState(
     val loading: Boolean = true,
     val stats: Stats = Stats(),
     val orders: List<OrderSummary> = emptyList(),
+    val activities: List<Pair<String, Long>> = emptyList(),
     val error: String? = null,
 )
 
@@ -33,7 +34,8 @@ class DashboardViewModel(private val repo: AdminRepository = AdminRepository()) 
             try {
                 _state.update { it.copy(orders = repo.recentOrders()) }
                 val stats = repo.computeStats()
-                _state.update { it.copy(loading = false, stats = stats) }
+                val acts = runCatching { repo.recentActivities() }.getOrDefault(emptyList())
+                _state.update { it.copy(loading = false, stats = stats, activities = acts) }
             } catch (e: Exception) {
                 _state.update { it.copy(loading = false, error = e.toUserMessage()) }
             }

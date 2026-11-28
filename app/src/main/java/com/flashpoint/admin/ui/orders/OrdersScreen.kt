@@ -14,6 +14,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.flashpoint.admin.core.OrderItem
+import java.text.DateFormat
+import java.util.Date
 import androidx.compose.ui.platform.LocalUriHandler
 
 @Composable
@@ -51,6 +53,16 @@ fun OrdersScreen(vm: OrdersViewModel = viewModel()) {
                                 Text("${o.customerName} • ${o.phone}")
                                 Text("Total (COD): %.2f".format(o.totalAmount))
                                 Text(o.address, style = MaterialTheme.typography.bodySmall)
+                                var open by remember { mutableStateOf(false) }
+                                TextButton({ open = !open }) { Text(if (open) "Hide details" else "Details") }
+                                if (open) {
+                                    o.items.forEach { Text("• $it", style = MaterialTheme.typography.bodySmall) }
+                                    Text("Payment: COD • ${o.paymentStatus.ifBlank { "pending" }}", style = MaterialTheme.typography.bodySmall)
+                                    Text("Placed: ${DateFormat.getDateTimeInstance().format(Date(o.createdAt))}", style = MaterialTheme.typography.bodySmall)
+                                    Text("Delivered: ${if (o.deliveredAt > 0) DateFormat.getDateTimeInstance().format(Date(o.deliveredAt)) else "-"}", style = MaterialTheme.typography.bodySmall)
+                                    Text("Customer UID: ${o.customerUid}", style = MaterialTheme.typography.labelSmall)
+                                    Text("Seller UID: ${o.sellerUid}", style = MaterialTheme.typography.labelSmall)
+                                }
                                 AssistChip({}, { Text(o.status) })
                                 val partner = s.partners.firstOrNull { it.uid == o.deliveryUid }
                                 Text(
@@ -85,7 +97,7 @@ fun OrdersScreen(vm: OrdersViewModel = viewModel()) {
                 if (s.partners.isEmpty()) Text("No approved delivery partners yet.")
                 else LazyColumn(Modifier.heightIn(max = 320.dp)) {
                     items(s.partners, key = { it.uid }) { p ->
-                        TextButton({ vm.assign(order.id, p.uid); assignFor = null }, Modifier.fillMaxWidth()) {
+                        TextButton({ vm.assign(order.id, p); assignFor = null }, Modifier.fillMaxWidth()) {
                             Text("${p.name.ifBlank { p.email }} • ${p.phone}")
                         }
                     }

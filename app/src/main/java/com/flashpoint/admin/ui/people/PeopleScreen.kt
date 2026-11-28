@@ -15,6 +15,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.flashpoint.admin.core.PersonItem
+import com.flashpoint.admin.ui.details.DetailDialog
+import com.flashpoint.admin.ui.details.DetailKind
 
 @Composable
 fun PeopleScreen(mode: PeopleMode) {
@@ -25,6 +27,7 @@ fun PeopleScreen(mode: PeopleMode) {
     val s by vm.state.collectAsStateWithLifecycle()
     val snack = remember { SnackbarHostState() }
     var pending by remember { mutableStateOf<Pair<PersonItem, String>?>(null) }
+    var detail by remember { mutableStateOf<PersonItem?>(null) }
 
     LaunchedEffect(s.message) { s.message?.let { snack.showSnackbar(it); vm.messageShown() } }
 
@@ -46,6 +49,7 @@ fun PeopleScreen(mode: PeopleMode) {
                                 Text("${p.email} • ${p.phone}", style = MaterialTheme.typography.bodySmall)
                                 Text(p.detail, style = MaterialTheme.typography.bodySmall)
                                 Text("UID: ${p.uid}", style = MaterialTheme.typography.labelSmall)
+                                TextButton({ detail = p }) { Text("View details & history") }
                                 if (mode == PeopleMode.DELIVERY) {
                                     AssistChip({}, { Text(p.status) })
                                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -65,6 +69,11 @@ fun PeopleScreen(mode: PeopleMode) {
                 }
             }
         }
+    }
+
+    detail?.let {
+        DetailDialog(if (mode == PeopleMode.DELIVERY) DetailKind.DELIVERY else DetailKind.CUSTOMER,
+            it.uid, it.name.ifBlank { it.email }) { detail = null }
     }
 
     pending?.let { (p, status) ->

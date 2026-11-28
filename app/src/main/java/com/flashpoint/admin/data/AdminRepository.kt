@@ -59,11 +59,14 @@ class AdminRepository(
         }.sortedBy { it.name.lowercase() }
     }
 
+    /** Also maintains the public list of approved sellers used by guest browsing and the database rules. */
     suspend fun setSellerStatus(uid: String, status: String) {
-        db.getReference("sellers/$uid").updateChildren(
-            mapOf("status" to status, "approved" to (status == "APPROVED"),
-                "updatedAt" to ServerValue.TIMESTAMP)
-        ).await()
+        db.reference.updateChildren(mapOf(
+            "sellers/$uid/status" to status,
+            "sellers/$uid/approved" to (status == "APPROVED"),
+            "sellers/$uid/updatedAt" to ServerValue.TIMESTAMP,
+            "appConfig/approvedSellers/$uid" to (if (status == "APPROVED") true else null),
+        )).await()
     }
 
     private fun DataSnapshot.statusOf(): String = str("status").ifBlank {
@@ -96,13 +99,18 @@ class AdminRepository(
             OrderItem(it.key.orEmpty(), it.str("customerName"), it.str("customerUid"),
                 it.str("sellerUid"), it.str("deliveryUid"), it.dbl("totalAmount"),
                 it.str("status"), it.str("address"), it.str("phone"),
-                it.str("locationLink"), it.long("createdAt"))
+                it.str("locationLink"), it.long("createdAt"),
+                items = it.child("items").children.map { i ->
+                    "${i.str("productName")} × ${i.long("quantity")} — ${"%.2f".format(i.dbl("price"))}"
+                },
+                deliveredAt = it.long("deliveredAt"), paymentStatus = it.str("paymentStatus"))
         }.sortedByDescending { it.createdAt }
     }
 
-    suspend fun assignDelivery(orderId: String, partnerUid: String) {
+    suspend fun assignDelivery(orderId: String, partner: PersonItem) {
         db.getReference("orders/$orderId").updateChildren(
-            mapOf("deliveryUid" to partnerUid, "updatedAt" to ServerValue.TIMESTAMP)
+            mapOf("deliveryUid" to partner.uid, "deliveryName" to partner.name,
+                "deliveryPhone" to partner.phone, "updatedAt" to ServerValue.TIMESTAMP)
         ).await()
     }
 
@@ -110,6 +118,14 @@ class AdminRepository(
         db.getReference("orders/$orderId").updateChildren(
             mapOf("status" to "CANCELLED", "updatedAt" to ServerValue.TIMESTAMP)
         ).await()
+    }
+
+    suspend fun recentActivities(): List<Pair<String, Long>> {
+        val reqs = db.getReference("returnExchangeRequests").orderByChild("createdAt").limitToLast(3).get().await()
+            .children.map { "${it.str("requestType").lowercase()} request: ${it.str("productName")} (${it.str("status")})" to it.long("createdAt") }
+        val notes = db.getReference("admin/notifications").orderByChild("createdAt").limitToLast(3).get().await()
+            .children.map { "Notification sent: ${it.str("title")}" to it.long("createdAt") }
+        return (reqs + notes).sortedByDescending { it.second }
     }
 
     /** Counts computed in the app (no Cloud Functions). Fine for small and medium data sets. */

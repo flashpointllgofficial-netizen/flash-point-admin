@@ -50,6 +50,16 @@ fun DashboardScreen(onOpenSellers: () -> Unit, vm: DashboardViewModel = viewMode
                 item { BarChart(listOf("Orders" to st.totalOrders, "Cust." to st.totalCustomers,
                     "Sellers" to st.totalSellers, "Deliv." to st.totalDeliveryPartners)) }
                 item { Button(onOpenSellers, Modifier.fillMaxWidth()) { Text("Manage Sellers") } }
+                item { Text("Recent Activities", style = MaterialTheme.typography.titleMedium) }
+                if (s.activities.isEmpty()) item { Text("No recent activity.") }
+                items(s.activities) { a ->
+                    Card(Modifier.fillMaxWidth()) {
+                        Column(Modifier.padding(12.dp)) {
+                            Text(a.first)
+                            Text(DateFormat.getDateTimeInstance().format(Date(a.second)), style = MaterialTheme.typography.bodySmall)
+                        }
+                    }
+                }
                 item { Text("Recent Orders", style = MaterialTheme.typography.titleMedium) }
                 if (s.orders.isEmpty()) item { Text("No orders yet.") }
                 items(s.orders) { o ->

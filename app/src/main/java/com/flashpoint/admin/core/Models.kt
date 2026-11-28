@@ -50,6 +50,9 @@ data class OrderItem(
     val phone: String,
     val locationLink: String,
     val createdAt: Long,
+    val items: List<String> = emptyList(),
+    val deliveredAt: Long = 0,
+    val paymentStatus: String = "",
 )
 
 data class BannerItem(

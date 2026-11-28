@@ -53,8 +53,8 @@ class OrdersViewModel(private val repo: AdminRepository = AdminRepository()) : V
     fun setFilter(f: String?) = _state.update { it.copy(filter = f) }
     fun messageShown() = _state.update { it.copy(message = null) }
 
-    fun assign(orderId: String, partnerUid: String) = run("Delivery partner assigned.") {
-        repo.assignDelivery(orderId, partnerUid)
+    fun assign(orderId: String, partner: PersonItem) = run("Delivery partner assigned.") {
+        repo.assignDelivery(orderId, partner)
     }
 
     fun cancel(orderId: String) = run("Order cancelled.") { repo.cancelOrder(orderId) }
