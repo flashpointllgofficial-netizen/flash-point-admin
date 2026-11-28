@@ -8,8 +8,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: |
-          unzip -o reports.zip
-          rm reports.zip
+          unzip -o admin-final.zip
+          rm admin-final.zip
           git config user.name "bot"
           git config user.email "bot@users.noreply.github.com"
           git add -A
