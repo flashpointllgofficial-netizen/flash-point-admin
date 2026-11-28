@@ -111,4 +111,25 @@ class AdminRepository(
             mapOf("status" to "CANCELLED", "updatedAt" to ServerValue.TIMESTAMP)
         ).await()
     }
+
+    /** Counts computed in the app (no Cloud Functions). Fine for small and medium data sets. */
+    suspend fun computeStats(): Stats {
+        val orders = db.getReference("orders").get().await()
+        val cod = orders.children.filter { it.str("status") == "DELIVERED" }.sumOf { it.dbl("totalAmount") }
+        val sellers = db.getReference("sellers").get().await()
+        val partners = db.getReference("deliveryPartners").get().await()
+        val customers = db.getReference("customers").get().await()
+        val reqs = db.getReference("returnExchangeRequests").get().await()
+        return Stats(
+            totalOrders = orders.childrenCount,
+            totalCustomers = customers.childrenCount,
+            totalSellers = sellers.childrenCount,
+            totalDeliveryPartners = partners.childrenCount,
+            pendingSellers = sellers.children.count { it.statusOf() == "PENDING" }.toLong(),
+            pendingDelivery = partners.children.count { it.statusOf() == "PENDING" }.toLong(),
+            codRevenue = cod,
+            returnRequests = reqs.children.count { it.str("requestType").equals("RETURN", true) }.toLong(),
+            exchangeRequests = reqs.children.count { it.str("requestType").equals("EXCHANGE", true) }.toLong(),
+        )
+    }
 }

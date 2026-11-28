@@ -32,7 +32,8 @@ class DashboardViewModel(private val repo: AdminRepository = AdminRepository()) 
         job = viewModelScope.launch {
             try {
                 _state.update { it.copy(orders = repo.recentOrders()) }
-                repo.stats().collect { s -> _state.update { it.copy(loading = false, stats = s) } }
+                val stats = repo.computeStats()
+                _state.update { it.copy(loading = false, stats = stats) }
             } catch (e: Exception) {
                 _state.update { it.copy(loading = false, error = e.toUserMessage()) }
             }

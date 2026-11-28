@@ -2,6 +2,7 @@ package com.flashpoint.admin.ui
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Notifications
@@ -28,6 +29,7 @@ import com.flashpoint.admin.ui.notifications.NotificationsScreen
 import com.flashpoint.admin.ui.orders.OrdersScreen
 import com.flashpoint.admin.ui.people.PeopleMode
 import com.flashpoint.admin.ui.people.PeopleScreen
+import com.flashpoint.admin.ui.reports.ReportsScreen
 import com.flashpoint.admin.ui.requests.RequestMode
 import com.flashpoint.admin.ui.requests.RequestsScreen
 import com.flashpoint.admin.ui.sellers.SellersScreen
@@ -44,6 +46,7 @@ private val DESTS = listOf(
     Dest("orders", "Orders", Icons.Default.ShoppingCart),
     Dest("returns", "Returns", Icons.Default.Replay),
     Dest("exchanges", "Exchanges", Icons.Default.SwapHoriz),
+    Dest("reports", "Reports", Icons.Default.BarChart),
     Dest("banners", "Banners", Icons.Default.Image),
     Dest("notifications", "Notifications", Icons.Default.Notifications),
 )
@@ -87,6 +90,7 @@ fun AdminHome(onSignOut: () -> Unit) {
                 composable("orders") { OrdersScreen() }
                 composable("returns") { RequestsScreen(RequestMode.RETURN) }
                 composable("exchanges") { RequestsScreen(RequestMode.EXCHANGE) }
+                composable("reports") { ReportsScreen() }
                 composable("banners") { BannersScreen() }
                 composable("notifications") { NotificationsScreen() }
             }
