@@ -77,3 +77,30 @@ data class SentNotification(
     val recipients: Long,
     val createdAt: Long,
 )
+
+data class HistoryEntry(val status: String, val message: String, val updatedAt: Long, val updatedBy: String)
+
+data class RequestItem(
+    val id: String,
+    val customerUid: String,
+    val sellerUid: String,
+    val orderId: String,
+    val productId: String,
+    val productName: String,
+    val quantity: Long,
+    val type: String, // RETURN or EXCHANGE
+    val reason: String,
+    val originalVariant: String,
+    val requestedVariant: String,
+    val deliveredAt: Long,
+    val createdAt: Long,
+    val status: String,
+    val adminNote: String,
+    val refundAmount: Double,
+    val refundMethod: String,
+    val refundReference: String,
+    val refundDate: Long,
+    val replacementProductId: String,
+    val replacementVariant: String,
+    val history: List<HistoryEntry>,
+)

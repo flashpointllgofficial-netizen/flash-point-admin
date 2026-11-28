@@ -5,6 +5,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Replay
+import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material.icons.filled.LocalShipping
 import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.Menu
@@ -26,6 +28,8 @@ import com.flashpoint.admin.ui.notifications.NotificationsScreen
 import com.flashpoint.admin.ui.orders.OrdersScreen
 import com.flashpoint.admin.ui.people.PeopleMode
 import com.flashpoint.admin.ui.people.PeopleScreen
+import com.flashpoint.admin.ui.requests.RequestMode
+import com.flashpoint.admin.ui.requests.RequestsScreen
 import com.flashpoint.admin.ui.sellers.SellersScreen
 import com.flashpoint.admin.ui.theme.Logo
 import kotlinx.coroutines.launch
@@ -38,6 +42,8 @@ private val DESTS = listOf(
     Dest("delivery", "Delivery Partners", Icons.Default.LocalShipping),
     Dest("customers", "Customers", Icons.Default.People),
     Dest("orders", "Orders", Icons.Default.ShoppingCart),
+    Dest("returns", "Returns", Icons.Default.Replay),
+    Dest("exchanges", "Exchanges", Icons.Default.SwapHoriz),
     Dest("banners", "Banners", Icons.Default.Image),
     Dest("notifications", "Notifications", Icons.Default.Notifications),
 )
@@ -79,6 +85,8 @@ fun AdminHome(onSignOut: () -> Unit) {
                 composable("delivery") { PeopleScreen(PeopleMode.DELIVERY) }
                 composable("customers") { PeopleScreen(PeopleMode.CUSTOMERS) }
                 composable("orders") { OrdersScreen() }
+                composable("returns") { RequestsScreen(RequestMode.RETURN) }
+                composable("exchanges") { RequestsScreen(RequestMode.EXCHANGE) }
                 composable("banners") { BannersScreen() }
                 composable("notifications") { NotificationsScreen() }
             }
