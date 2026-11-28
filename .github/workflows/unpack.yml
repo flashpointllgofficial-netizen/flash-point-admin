@@ -8,10 +8,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: |
-          unzip -o admin-final.zip
-          rm admin-final.zip
+          unzip -o admin-complete.zip
+          rm admin-complete.zip
           git config user.name "bot"
           git config user.email "bot@users.noreply.github.com"
           git add -A
-          git commit -m "Apply reports"
+          git commit -m "Apply admin-final"
           git push
