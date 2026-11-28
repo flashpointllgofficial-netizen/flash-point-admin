@@ -6,6 +6,7 @@ import com.flashpoint.admin.core.OrderItem
 import com.flashpoint.admin.core.PersonItem
 import com.flashpoint.admin.core.toUserMessage
 import com.flashpoint.admin.data.AdminRepository
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
@@ -17,6 +18,8 @@ val ORDER_STATUSES = listOf(
     "OUT_FOR_DELIVERY", "DELIVERED", "CANCELLED",
 )
 
+private const val PAGE = 50
+
 data class OrdersState(
     val loading: Boolean = true,
     val orders: List<OrderItem> = emptyList(),
@@ -25,29 +28,42 @@ data class OrdersState(
     val filter: String? = null,
     val error: String? = null,
     val message: String? = null,
+    val limit: Int = PAGE,
 ) {
     val visible: List<OrderItem>
         get() = orders.filter {
             (filter == null || it.status == filter) &&
                 (query.isBlank() || it.id.contains(query, true) || it.customerName.contains(query, true))
         }
+    val canLoadMore: Boolean get() = orders.size >= limit
     val codDelivered: Double get() = orders.filter { it.status == "DELIVERED" }.sumOf { it.totalAmount }
 }
 
 class OrdersViewModel(private val repo: AdminRepository = AdminRepository()) : ViewModel() {
     private val _state = MutableStateFlow(OrdersState())
     val state: StateFlow<OrdersState> = _state
+    private var ordersJob: Job? = null
 
     init {
-        viewModelScope.launch {
-            repo.orders().catch { e -> _state.update { it.copy(loading = false, error = e.toUserMessage()) } }
-                .collect { list -> _state.update { it.copy(loading = false, orders = list, error = null) } }
-        }
+        start()
         viewModelScope.launch {
             repo.deliveryPartners().catch { }
                 .collect { list -> _state.update { it.copy(partners = list.filter { p -> p.status == "APPROVED" }) } }
         }
     }
+
+    private fun start() {
+        ordersJob?.cancel()
+        _state.update { it.copy(loading = true, error = null) }
+        ordersJob = viewModelScope.launch {
+            repo.orders(_state.value.limit)
+                .catch { e -> _state.update { it.copy(loading = false, error = e.toUserMessage()) } }
+                .collect { list -> _state.update { it.copy(loading = false, orders = list, error = null) } }
+        }
+    }
+
+    fun retry() = start()
+    fun loadMore() { _state.update { it.copy(limit = it.limit + PAGE) }; start() }
 
     fun setQuery(q: String) = _state.update { it.copy(query = q) }
     fun setFilter(f: String?) = _state.update { it.copy(filter = f) }

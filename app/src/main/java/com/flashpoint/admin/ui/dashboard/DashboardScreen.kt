@@ -1,7 +1,9 @@
 package com.flashpoint.admin.ui.dashboard
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -20,7 +22,7 @@ import java.text.DateFormat
 import java.util.Date
 
 @Composable
-fun DashboardScreen(onOpenSellers: () -> Unit, vm: DashboardViewModel = viewModel()) {
+fun DashboardScreen(onNavigate: (String) -> Unit, vm: DashboardViewModel = viewModel()) {
     val s by vm.state.collectAsStateWithLifecycle()
     when {
         s.loading -> Box(Modifier.fillMaxSize(), Alignment.Center) { CircularProgressIndicator() }
@@ -49,7 +51,17 @@ fun DashboardScreen(onOpenSellers: () -> Unit, vm: DashboardViewModel = viewMode
                 }
                 item { BarChart(listOf("Orders" to st.totalOrders, "Cust." to st.totalCustomers,
                     "Sellers" to st.totalSellers, "Deliv." to st.totalDeliveryPartners)) }
-                item { Button(onOpenSellers, Modifier.fillMaxWidth()) { Text("Manage Sellers") } }
+                item {
+                    Text("Quick actions", style = MaterialTheme.typography.titleMedium)
+                    Row(Modifier.horizontalScroll(rememberScrollState()).padding(top = 8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        listOf("Sellers" to "sellers", "Delivery" to "delivery", "Orders" to "orders",
+                            "Returns" to "returns", "Exchanges" to "exchanges", "Banners" to "banners",
+                            "Notify" to "notifications", "Reports" to "reports").forEach { (label, route) ->
+                            AssistChip({ onNavigate(route) }, { Text(label) })
+                        }
+                    }
+                }
                 item { Text("Recent Activities", style = MaterialTheme.typography.titleMedium) }
                 if (s.activities.isEmpty()) item { Text("No recent activity.") }
                 items(s.activities) { a ->

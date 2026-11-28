@@ -24,8 +24,16 @@ class SellersViewModel(private val repo: AdminRepository = AdminRepository()) : 
     private val _state = MutableStateFlow(SellersState())
     val state: StateFlow<SellersState> = _state
 
-    init {
-        viewModelScope.launch {
+    private var job: kotlinx.coroutines.Job? = null
+
+    init { start() }
+
+    fun retry() = start()
+
+    private fun start() {
+        job?.cancel()
+        _state.update { it.copy(loading = true, error = null) }
+        job = viewModelScope.launch {
             repo.sellers().catch { e -> _state.update { it.copy(loading = false, error = e.toUserMessage()) } }
                 .collect { list -> _state.update { it.copy(loading = false, sellers = list, error = null) } }
         }

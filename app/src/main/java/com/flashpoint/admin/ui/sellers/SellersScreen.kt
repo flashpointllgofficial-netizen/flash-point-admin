@@ -33,7 +33,7 @@ fun SellersScreen(vm: SellersViewModel = viewModel()) {
             Spacer(Modifier.height(8.dp))
             when {
                 s.loading -> Box(Modifier.fillMaxSize(), Alignment.Center) { CircularProgressIndicator() }
-                s.error != null -> Text(s.error!!, color = MaterialTheme.colorScheme.error)
+                s.error != null -> Column { Text(s.error!!, color = MaterialTheme.colorScheme.error); Button({ vm.retry() }) { Text("Retry") } }
                 s.visible.isEmpty() -> Text("No sellers found.")
                 else -> LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     items(s.visible, key = { it.uid }) { seller ->

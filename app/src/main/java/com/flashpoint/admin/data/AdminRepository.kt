@@ -8,6 +8,7 @@ import com.flashpoint.admin.core.Stats
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.Query
 import com.google.firebase.database.ServerValue
 import com.google.firebase.database.ValueEventListener
 import kotlinx.coroutines.channels.awaitClose
@@ -23,8 +24,9 @@ class AdminRepository(
     private fun DataSnapshot.dbl(k: String) = (child(k).value as? Number)?.toDouble() ?: 0.0
     private fun DataSnapshot.str(k: String) = child(k).value?.toString().orEmpty()
 
-    private fun <T> listen(path: String, map: (DataSnapshot) -> T): Flow<T> = callbackFlow {
-        val ref = db.getReference(path)
+    private fun <T> listen(path: String, map: (DataSnapshot) -> T): Flow<T> = listenQuery(db.getReference(path), map)
+
+    private fun <T> listenQuery(ref: Query, map: (DataSnapshot) -> T): Flow<T> = callbackFlow {
         val l = object : ValueEventListener {
             override fun onDataChange(s: DataSnapshot) { trySend(map(s)) }
             override fun onCancelled(e: DatabaseError) { close(e.toException()) }
@@ -94,7 +96,8 @@ class AdminRepository(
         ).await()
     }
 
-    fun orders(): Flow<List<OrderItem>> = listen("orders") { s ->
+    fun orders(limit: Int = 50): Flow<List<OrderItem>> =
+        listenQuery(db.getReference("orders").orderByChild("createdAt").limitToLast(limit)) { s ->
         s.children.map {
             OrderItem(it.key.orEmpty(), it.str("customerName"), it.str("customerUid"),
                 it.str("sellerUid"), it.str("deliveryUid"), it.dbl("totalAmount"),

@@ -34,8 +34,16 @@ class PeopleViewModel(
     private val _state = MutableStateFlow(PeopleState())
     val state: StateFlow<PeopleState> = _state
 
-    init {
-        viewModelScope.launch {
+    private var job: kotlinx.coroutines.Job? = null
+
+    init { start() }
+
+    fun retry() = start()
+
+    private fun start() {
+        job?.cancel()
+        _state.update { it.copy(loading = true, error = null) }
+        job = viewModelScope.launch {
             val flow = if (mode == PeopleMode.DELIVERY) repo.deliveryPartners() else repo.customers()
             flow.catch { e -> _state.update { it.copy(loading = false, error = e.toUserMessage()) } }
                 .collect { list -> _state.update { it.copy(loading = false, people = list, error = null) } }
